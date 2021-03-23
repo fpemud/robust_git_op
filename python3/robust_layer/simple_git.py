@@ -26,7 +26,7 @@
 import os
 import time
 import subprocess
-from _util import Util
+from ._util import Util
 
 
 def clean(dest_dir):

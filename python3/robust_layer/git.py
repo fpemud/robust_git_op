@@ -25,7 +25,7 @@
 
 import time
 import subprocess
-from _util import Util
+from ._util import Util
 
 
 def additional_environ():
@@ -36,7 +36,6 @@ def additional_environ():
 
 
 def clone(*args):
-    args = list(args)
     while True:
         try:
             Util.cmdExecWithStuckCheck(["/usr/bin/git", "clone"] + args, additional_environ())
@@ -51,7 +50,6 @@ def clone(*args):
 
 
 def pull(*args):
-    args = list(args)
     assert not any(x not in args for x in ["-r", "--rebase", "--no-rebase"])
 
     while True:
