@@ -27,6 +27,7 @@ import os
 import time
 import subprocess
 from ._util import Util
+from .git import additional_environ
 
 
 def clean(dest_dir):
@@ -43,26 +44,7 @@ def clone(dest_directory, url, quiet=False):
     while True:
         try:
             cmd = "/usr/bin/git clone %s \"%s\" \"%s\"" % (quietArg, url, dest_directory)
-            Util.shellExecWithStuckCheck(cmd, git.additional_environ(), quiet)
-            break
-        except Util.ProcessStuckError:
-            time.sleep(Util.RETRY_TIMEOUT)
-        except subprocess.CalledProcessError as e:
-            if e.returncode > 128:
-                # terminated by signal, no retry needed
-                raise
-            time.sleep(Util.RETRY_TIMEOUT)
-
-
-    if quiet:
-        quietArg = "-q"
-    else:
-        quietArg = ""
-
-    while True:
-        try:
-            cmd = "/usr/bin/git -C \"%s\" pull --rebase --no-stat %s" % (dest_directory, quietArg)
-            Util.shellExecWithStuckCheck(cmd, git.additional_environ(), quiet)
+            Util.shellExecWithStuckCheck(cmd, additional_environ(), quiet)
             break
         except Util.ProcessStuckError:
             time.sleep(Util.RETRY_TIMEOUT)
@@ -102,7 +84,7 @@ def pull(dest_directory, reclone_on_failure=False, url=None, quiet=False):
             clean(dest_directory)
             try:
                 cmd = "/usr/bin/git -C \"%s\" pull --rebase --no-stat %s" % (dest_directory, quietArg)
-                Util.shellExecWithStuckCheck(cmd, git.additional_environ(), quiet)
+                Util.shellExecWithStuckCheck(cmd, additional_environ(), quiet)
                 break
             except Util.ProcessStuckError:
                 time.sleep(1.0)
@@ -119,7 +101,7 @@ def pull(dest_directory, reclone_on_failure=False, url=None, quiet=False):
             Util.forceDelete(dest_directory)
             try:
                 cmd = "/usr/bin/git clone %s \"%s\" \"%s\"" % (quietArg, url, dest_directory)
-                Util.shellExecWithStuckCheck(cmd, git.additional_environ(), quiet)
+                Util.shellExecWithStuckCheck(cmd, additional_environ(), quiet)
                 break
             except subprocess.CalledProcessError as e:
                 if e.returncode > 128:
