@@ -47,6 +47,6 @@ setup(
     classifiers=classif,
     url='http://github.com/mirrorshq/robust_layer',
     download_url='',
-    py_modules=['robust_layer'],
-    package_dir={'': 'python3'},
+    packages=['robust_layer'],
+    package_dir={'robust_layer': 'python3/robust_layer'},
 )
