@@ -47,6 +47,19 @@ class ProcessStuckError(Exception):
 class Util:
 
     @staticmethod
+    def forceDelete(path):
+        if os.path.islink(path):
+            os.remove(path)
+        elif os.path.isfile(path):
+            os.remove(path)
+        elif os.path.isdir(path):
+            shutil.rmtree(path)
+        elif os.path.exists(path):      # FIXME: device node, how to check it?
+            os.remove(path)
+        else:
+            pass                        # path not exists, do nothing
+
+    @staticmethod
     def rmDirContent(dirpath):
         for filename in os.listdir(dirpath):
             filepath = os.path.join(dirpath, filename)

@@ -54,7 +54,6 @@ def clone(dest_directory, url, quiet=False):
             time.sleep(Util.RETRY_TIMEOUT)
 
 
-def pull(dest_directory, quiet=False):
     if quiet:
         quietArg = "-q"
     else:
@@ -74,19 +73,29 @@ def pull(dest_directory, quiet=False):
             time.sleep(Util.RETRY_TIMEOUT)
 
 
-def pull_or_reclone(dest_directory, url, quiet=False):
+def pull(dest_directory, reclone_on_failure=False, url=None, quiet=False):
+    if reclone_on_failure:
+        assert url is not None
+    else:
+        assert url is None
+
     if quiet:
         quietArg = "-q"
     else:
         quietArg = ""
 
     mode = "pull"
-    if not os.path.exists(dest_directory):
-        mode = "clone"
-    if mode == "pull" and not os.path.isdir(os.path.join(dest_directory, ".git")):
-        mode = "clone"
-    if mode == "pull" and url != _gitGetUrl(dest_directory):
-        mode = "clone"
+    while reclone_on_failure:
+        if not os.path.exists(dest_directory):
+            mode = "clone"
+            break
+        if not os.path.isdir(os.path.join(dest_directory, ".git")):
+            mode = "clone"
+            break
+        if url != _gitGetUrl(dest_directory):
+            mode = "clone"
+            break
+        break
 
     while True:
         if mode == "pull":
@@ -101,6 +110,8 @@ def pull_or_reclone(dest_directory, url, quiet=False):
                 if e.returncode > 128:
                     raise                    # terminated by signal, no retry needed
                 if "fatal: refusing to merge unrelated histories" in str(e.stderr):
+                    if not reclone_on_failure:
+                        raise
                     mode = "clone"
                 else:
                     time.sleep(1.0)
