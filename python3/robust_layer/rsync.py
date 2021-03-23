@@ -23,5 +23,17 @@
 # THE SOFTWARE.
 
 
+import time
+import subprocess
 from ._util import Util
 
+
+def exec(*args):
+    while True:
+        try:
+            Util.cmdExec("/usr/bin/rsync", "--timeout=%d" % (Util.STUCK_TIMEOUT), *args)
+            break
+        except subprocess.CalledProcessError as e:
+            if e.returncode > 128:
+                raise                    # terminated by signal, no retry needed
+            time.sleep(1.0)

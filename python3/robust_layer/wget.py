@@ -27,7 +27,7 @@ from ._util import Util
 
 
 def additional_param():
-    return ["-t", "0", "-w", "60", "--random-wait", "-T", "60", "--passive-ftp"]
+    return ["-t", "0", "-w", str(Util.STUCK_TIMEOUT), "--random-wait", "-T", str(Util.STUCK_TIMEOUT), "--passive-ftp"]
 
 
 def exec(*args):

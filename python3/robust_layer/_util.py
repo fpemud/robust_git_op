@@ -93,6 +93,28 @@ class Util:
         return ret.stdout.rstrip()
 
     @staticmethod
+    def cmdExec(cmd, *kargs):
+        # call command to execute frontend job
+        #
+        # scenario 1, process group receives SIGTERM, SIGINT and SIGHUP:
+        #   * callee must auto-terminate, and cause no side-effect
+        #   * caller must be terminate AFTER child-process, and do neccessary finalization
+        #   * termination information should be printed by callee, not caller
+        # scenario 2, caller receives SIGTERM, SIGINT, SIGHUP:
+        #   * caller should terminate callee, wait callee to stop, do neccessary finalization, print termination information, and be terminated by signal
+        #   * callee does not need to treat this scenario specially
+        # scenario 3, callee receives SIGTERM, SIGINT, SIGHUP:
+        #   * caller detects child-process failure and do appopriate treatment
+        #   * callee should print termination information
+
+        # FIXME, the above condition is not met, FmUtil.shellExec has the same problem
+
+        ret = subprocess.run([cmd] + list(kargs), universal_newlines=True)
+        if ret.returncode > 128:
+            time.sleep(1.0)
+        ret.check_returncode()
+
+    @staticmethod
     def cmdExecWithStuckCheck(cmdList, envDict={}, bQuiet=False):
         # run the process
         proc = subprocess.Popen(cmdList, stdout=subprocess.PIPE, stderr=subprocess.PIPE,

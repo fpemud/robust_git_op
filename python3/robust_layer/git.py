@@ -31,7 +31,7 @@ from ._util import Util
 def additional_environ():
     return {
         "GIT_HTTP_LOW_SPEED_LIMIT": "1024",
-        "GIT_HTTP_LOW_SPEED_TIME": "60",
+        "GIT_HTTP_LOW_SPEED_TIME": str(Util.STUCK_TIMEOUT),
     }
 
 
