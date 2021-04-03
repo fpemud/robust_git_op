@@ -1,0 +1,19 @@
+function:
+1. when failure, repeat forever
+2. stuck check
+
+unrecoverable failure (git):
+1. private domain name does not exist
+2. 
+
+unrecoverable failure (wget):
+1. private domain name does not exist
+2. 
+
+unrecoverable failure (rsync):
+1. private domain name does not exist
+2. 
+
+unrecoverable failure (subversion):
+1. private domain name does not exist
+2. 

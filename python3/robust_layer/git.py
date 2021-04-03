@@ -24,6 +24,7 @@
 
 
 import os
+import re
 import time
 import subprocess
 from . import TIMEOUT, RETRY_WAIT
@@ -50,6 +51,10 @@ def clone(*args):
             if e.returncode > 128:
                 # terminated by signal, no retry needed
                 raise
+            m = re.fullmatch("fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
+            if m is not None and Util.isDomainNamePrivate(m.group(1)):
+                # unrecoverable error, don't retry any more
+                raise PrivateUrlNotExistError()
             time.sleep(RETRY_WAIT)
 
 
@@ -66,6 +71,10 @@ def fetch(*args):
             if e.returncode > 128:
                 # terminated by signal, no retry needed
                 raise
+            m = re.fullmatch("fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
+            if m is not None and Util.isDomainNamePrivate(m.group(1)):
+                # unrecoverable error, don't retry any more
+                raise PrivateUrlNotExistError()
             time.sleep(RETRY_WAIT)
 
 
@@ -83,6 +92,10 @@ def pull(*args):
             if e.returncode > 128:
                 # terminated by signal, no retry needed
                 raise
+            m = re.fullmatch("fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
+            if m is not None and Util.isDomainNamePrivate(m.group(1)):
+                # unrecoverable error, don't retry any more
+                raise PrivateUrlNotExistError()
             time.sleep(RETRY_WAIT)
 
 
@@ -99,6 +112,10 @@ def push(*args):
             if e.returncode > 128:
                 # terminated by signal, no retry needed
                 raise
+            m = re.fullmatch("fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
+            if m is not None and Util.isDomainNamePrivate(m.group(1)):
+                # unrecoverable error, don't retry any more
+                raise PrivateUrlNotExistError()
             time.sleep(RETRY_WAIT)
 
 

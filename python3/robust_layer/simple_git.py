@@ -24,11 +24,12 @@
 
 
 import os
+import re
 import time
 import subprocess
 from . import RETRY_WAIT
 from ._util import Util, ProcessStuckError
-from .git import additional_environ
+from .git import additional_environ, PrivateUrlNotExistError
 
 
 def clean(dest_dir):
@@ -55,6 +56,10 @@ def clone(dest_directory, url, quiet=False):
             if e.returncode > 128:
                 # terminated by signal, no retry needed
                 raise
+            m = re.fullmatch("fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
+            if m is not None and Util.isDomainNamePrivate(m.group(1)):
+                # unrecoverable error, don't retry any more
+                raise PrivateUrlNotExistError()
             time.sleep(RETRY_WAIT)
 
 
@@ -96,6 +101,12 @@ def pull(dest_directory, reclone_on_failure=False, url=None, quiet=False):
             except subprocess.CalledProcessError as e:
                 if e.returncode > 128:
                     raise                    # terminated by signal, no retry needed
+
+                m = re.fullmatch("fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
+                if m is not None and Util.isDomainNamePrivate(m.group(1)):
+                    # unrecoverable error, don't retry any more
+                    raise PrivateUrlNotExistError()
+
                 if "fatal: refusing to merge unrelated histories" in str(e.stderr):
                     if not reclone_on_failure:
                         raise
@@ -111,6 +122,12 @@ def pull(dest_directory, reclone_on_failure=False, url=None, quiet=False):
             except subprocess.CalledProcessError as e:
                 if e.returncode > 128:
                     raise                    # terminated by signal, no retry needed
+
+                m = re.fullmatch("fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
+                if m is not None and Util.isDomainNamePrivate(m.group(1)):
+                    # unrecoverable error, don't retry any more
+                    raise PrivateUrlNotExistError()
+
                 time.sleep(1.0)
         else:
             assert False
