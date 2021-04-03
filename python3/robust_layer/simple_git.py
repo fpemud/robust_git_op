@@ -100,6 +100,7 @@ def pull(dest_directory, reclone_on_failure=False, url=None, quiet=False):
                 break
             except ProcessStuckError:
                 time.sleep(1.0)
+                continue
             except subprocess.CalledProcessError as e:
                 # terminated by signal, no retry needed
                 if e.returncode > 128:
@@ -126,6 +127,9 @@ def pull(dest_directory, reclone_on_failure=False, url=None, quiet=False):
                 cmd = "/usr/bin/git clone %s \"%s\" \"%s\"" % (quietArg, url, dest_directory)
                 Util.shellExecWithStuckCheck(cmd, Util.mergeDict(os.environ, additional_environ()), quiet)
                 break
+            except ProcessStuckError:
+                time.sleep(1.0)
+                continue
             except subprocess.CalledProcessError as e:
                 # terminated by signal, no retry needed
                 if e.returncode > 128:
