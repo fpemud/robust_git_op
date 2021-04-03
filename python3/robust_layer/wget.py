@@ -38,3 +38,7 @@ def exec(*args):
         assert not re.fullmatch("(-t|--tries|-w|--wait|-T|--timetout)(=.*)?")
 
     Util.cmdExec("/usr/bin/wget", *additional_param(), *args)
+
+
+class PrivateUrlNotExistError(Exception):
+    pass

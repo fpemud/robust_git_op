@@ -38,3 +38,7 @@ def exec(*args):
             if e.returncode > 128:
                 raise                    # terminated by signal, no retry needed
             time.sleep(RETRY_WAIT)
+
+
+class PrivateUrlNotExistError(Exception):
+    pass

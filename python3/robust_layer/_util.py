@@ -25,9 +25,11 @@
 import os
 import sys
 import time
+import socket
 import shutil
 import selectors
 import subprocess
+import urllib.parse
 from . import TIMEOUT
 
 
@@ -113,7 +115,7 @@ class Util:
         #   * caller detects child-process failure and do appopriate treatment
         #   * callee should print termination information
 
-        # FIXME, the above condition is not met, FmUtil.shellExec has the same problem
+        # FIXME, the above condition is not met, Util.shellExec has the same problem
 
         ret = subprocess.run([cmd] + list(kargs), universal_newlines=True)
         if ret.returncode > 128:
@@ -130,7 +132,7 @@ class Util:
     @staticmethod
     def shellCall(cmd):
         # call command with shell to execute backstage job
-        # scenarios are the same as FmUtil.cmdCall
+        # scenarios are the same as Util.cmdCall
 
         ret = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                              shell=True, universal_newlines=True)
@@ -195,3 +197,44 @@ class Util:
             raise ProcessStuckError(proc.args, TIMEOUT)
         if proc.returncode:
             raise subprocess.CalledProcessError(proc.returncode, proc.args, sStdout, sStderr)
+
+    @staticmethod
+    def isDomainNamePrivate(domainName):
+        tldList = [".intranet", ".internal", ".private", ".corp", ".home", ".lan"]    # from RFC6762
+        tldList.append(".local")
+        return any(domainName.endswith(x) for x in tldList)
+
+    @staticmethod
+    def tryPrivateDomainName(domainName):
+        # return True: the private domain name is accessabile
+        # return False: the private domain name is not accessabile after some test
+
+        assert Util.isDomainNamePrivate(domainName)
+
+        while True:
+            try:
+                socket.gethostbyname(domainName)
+                return True
+            except socket.gaierror as e:
+                if e.errno == -2:           # Name or service not known
+                    return False
+                elif e.errno == -3:         # Temporary failure in name resolution
+                    pass
+                elif e.errno == -5:         # No address associated with hostname
+                    return False
+                else:
+                    raise
+                sys.stderr.write(e.strerror)
+                time.sleep(1.0)
+
+    @staticmethod
+    def isUrlPrivate(url):
+        domainName = urllib.parse.urlparse(url).hostname
+        return Util.isDomainNamePrivate(domainName)
+
+    @staticmethod
+    def tryPrivateUrl(url):
+        # return True: the private URL is accessabile
+        # return False: the private URL is not accessabile after some test
+        domainName = urllib.parse.urlparse(url).hostname
+        return Util.tryPrivateDomainName(domainName)

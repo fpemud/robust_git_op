@@ -100,3 +100,7 @@ def push(*args):
                 # terminated by signal, no retry needed
                 raise
             time.sleep(RETRY_WAIT)
+
+
+class PrivateUrlNotExistError(Exception):
+    pass

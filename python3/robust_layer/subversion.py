@@ -29,3 +29,7 @@ def checkout(*args):
 
 def update(*args):
     assert False
+
+
+class PrivateUrlNotExistError(Exception):
+    pass
