@@ -58,7 +58,7 @@ def clone(dest_directory, url, quiet=False):
                 raise
 
             # unrecoverable error: private domain name does not exists (see comments in robust_layer.git)
-            m = re.fullmatch("fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
+            m = re.search("fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
             if m is not None and Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
                 raise PrivateUrlNotExistError()
 
@@ -107,7 +107,7 @@ def pull(dest_directory, reclone_on_failure=False, url=None, quiet=False):
                     raise
 
                 # unrecoverable error: private domain name does not exists (see comments in robust_layer.git)
-                m = re.fullmatch("fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
+                m = re.search("fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
                 if m is not None and Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
                     raise PrivateUrlNotExistError()
 
@@ -136,7 +136,7 @@ def pull(dest_directory, reclone_on_failure=False, url=None, quiet=False):
                     raise
 
                 # unrecoverable error: private domain name does not exists (see comments in robust_layer.git)
-                m = re.fullmatch("fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
+                m = re.search("fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
                 if m is not None and Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
                     raise PrivateUrlNotExistError()
 
