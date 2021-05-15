@@ -220,3 +220,16 @@ class Util:
                 return True
             else:
                 return False
+
+
+class TempChdir:
+
+    def __init__(self, dirname):
+        self.olddir = os.getcwd()
+        os.chdir(dirname)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        os.chdir(self.olddir)

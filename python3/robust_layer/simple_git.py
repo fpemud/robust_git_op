@@ -31,9 +31,9 @@ from ._util import Util, ProcessStuckError
 from .git import additional_environ, _checkPrivateDomainNotExist
 
 
-def clean(dest_dir):
-    Util.cmdCall("/usr/bin/git", "-C", dest_dir, "reset", "--hard")  # revert any modifications
-    Util.cmdCall("/usr/bin/git", "-C", dest_dir, "clean", "-xfd")    # delete untracked files
+def clean(dest_directory):
+    Util.cmdCall("/usr/bin/git", "-C", dest_directory, "reset", "--hard")  # revert any modifications
+    Util.cmdCall("/usr/bin/git", "-C", dest_directory, "clean", "-xfd")    # delete untracked files
 
 
 def clone(dest_directory, url, quiet=False):

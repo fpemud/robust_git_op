@@ -28,11 +28,12 @@ import re
 import time
 import subprocess
 from . import RETRY_WAIT
-from ._util import Util, ProcessStuckError
+from ._util import Util, ProcessStuckError, TempChdir
 
 
-def clean(dest_dir):
-    pass
+def clean(dest_directory):
+    with TempChdir(dest_directory):
+        Util.cmdCall("/usr/bin/svn", "cleanup")
 
 
 def checkout(dest_directory, url, quiet=False):
@@ -44,7 +45,7 @@ def checkout(dest_directory, url, quiet=False):
 
     while True:
         try:
-            cmd = "/usr/bin/svn update %s \"%s\" \"%s\"" % (quietArg, url, dest_directory)
+            cmd = "/usr/bin/svn checkout %s \"%s\" \"%s\"" % (quietArg, url, dest_directory)
             Util.shellExecWithStuckCheck(cmd, {}, quiet)
             break
         except ProcessStuckError:
@@ -85,8 +86,9 @@ def update(dest_directory, recheckout_on_failure=False, url=None, quiet=False):
         if mode == "update":
             clean(dest_directory)
             try:
-                cmd = "/usr/bin/svn -C \"%s\" update %s" % (dest_directory, quietArg)
-                Util.shellExecWithStuckCheck(cmd, {}, quiet)
+                with TempChdir(dest_directory):
+                    cmd = "/usr/bin/svn update %s" % (quietArg)
+                    Util.shellExecWithStuckCheck(cmd, {}, quiet)
                 break
             except ProcessStuckError:
                 time.sleep(1.0)
