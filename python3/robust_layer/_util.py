@@ -123,14 +123,12 @@ class Util:
 
     @staticmethod
     def cmdListExec(cmdList, envDict={}, bQuiet=False):
-        ret = subprocess.run(cmdList, universal_newlines=True, env=envDict)
-        if ret.returncode > 128:
-            time.sleep(PARENT_WAIT)
-        ret.check_returncode()
+        proc = subprocess.Popen(cmdList, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                universal_newlines=True, env=envDict)
+        Util._communicate(proc, bQuiet)
 
     @staticmethod
     def cmdListExecWithStuckCheck(cmdList, envDict={}, bQuiet=False):
-        # run the process
         proc = subprocess.Popen(cmdList, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 universal_newlines=True, env=envDict)
         Util._communicateWithStuckCheck(proc, bQuiet)
@@ -152,10 +150,9 @@ class Util:
 
     @staticmethod
     def shellExec(cmd, envDict={}, bQuiet=False):
-        ret = subprocess.run(cmd, shell=True, universal_newlines=True, env=envDict)
-        if ret.returncode > 128:
-            time.sleep(1.0)
-        ret.check_returncode()
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                shell=True, universal_newlines=True, env=envDict)
+        Util._communicate(proc, bQuiet)
 
     @staticmethod
     def shellExecWithStuckCheck(cmd, envDict={}, bQuiet=False):
@@ -163,6 +160,44 @@ class Util:
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 shell=True, universal_newlines=True, env=envDict)
         Util._communicateWithStuckCheck(proc, bQuiet)
+
+    @staticmethod
+    def _communicate(proc, bQuiet):
+        if hasattr(selectors, 'PollSelector'):
+            pselector = selectors.PollSelector
+        else:
+            pselector = selectors.SelectSelector
+
+        # redirect proc.stdout/proc.stderr to stdout/stderr
+        # make CalledProcessError contain stdout/stderr content
+        # terminate the process and raise exception if they stuck
+        sStdout = ""
+        sStderr = ""
+        with pselector() as selector:
+            selector.register(proc.stdout, selectors.EVENT_READ)
+            selector.register(proc.stderr, selectors.EVENT_READ)
+            while selector.get_map():
+                res = selector.select(TIMEOUT)
+                for key, events in res:
+                    data = key.fileobj.read()
+                    if not data:
+                        selector.unregister(key.fileobj)
+                        continue
+                    if key.fileobj == proc.stdout:
+                        sStdout += data
+                        sys.stdout.write(data)
+                    elif key.fileobj == proc.stderr:
+                        sStderr += data
+                        sys.stderr.write(data)
+                    else:
+                        assert False
+
+        proc.communicate()
+
+        if proc.returncode > 128:
+            time.sleep(PARENT_WAIT)
+        if proc.returncode:
+            raise subprocess.CalledProcessError(proc.returncode, proc.args, sStdout, sStderr)
 
     @staticmethod
     def _communicateWithStuckCheck(proc, bQuiet):
