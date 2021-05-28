@@ -121,7 +121,7 @@ class Util:
         Util._communicate(proc)
 
     @staticmethod
-    def cmdListPtyExecWithPtyStuckCheck(cmdList, envDict={}, bQuiet=False):
+    def cmdListPtyExecWithStuckCheck(cmdList, envDict={}, bQuiet=False):
         proc = ptyprocess.PtyProcessUnicode.spawn(cmdList, env=envDict)
         Util._communicateWithStuckCheck(proc, bQuiet)
 
