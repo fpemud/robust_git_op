@@ -169,6 +169,7 @@ class Util:
                         continue
                     sStdout += data
                     sys.stdout.buffer.write(data)
+                    sys.stdout.flush()
 
         retcode = proc.wait()
         if retcode > 128:
