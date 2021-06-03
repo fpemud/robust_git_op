@@ -85,6 +85,10 @@ def _doGitNetOp(action, cmdList):
             if e.returncode > 128:
                 raise
 
+            # unrecoverable error
+            if re.search("^error: cannot pull with rebase: You have unstaged changes.", e.stdout, re.M) is not None:
+                raise
+
             # unrecoverable error: private domain name does not exists
             # we think public domain names are always well maintained, but private domain names are not.
             # always retry for public domain name failure of any reason, abort opertaion when private domain name does not exist
