@@ -26,14 +26,18 @@
 import time
 import subprocess
 from . import TIMEOUT, RETRY_WAIT
-from ._util import Util
+from ._util import Util, ProcessStuckError
 
 
 def exec(*args):
     while True:
         try:
-            Util.cmdListExec(["/usr/bin/rsync", "--timeout=%d" % (TIMEOUT)] + list(args))
+            # rsync can stuck when:
+            # 1. local ip changed
+            Util.cmdListExecWithStuckCheck(["/usr/bin/rsync", "--timeout=%d" % (TIMEOUT)] + list(args))
             break
+        except ProcessStuckError:
+            time.sleep(RETRY_WAIT)
         except subprocess.CalledProcessError as e:
             if e.returncode > 128:
                 raise                    # terminated by signal, no retry needed

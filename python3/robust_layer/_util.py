@@ -128,6 +128,12 @@ class Util:
         Util._communicate(proc)
 
     @staticmethod
+    def cmdListExecWithStuckCheck(cmdList, envDict=None, bQuiet=False):
+        proc = subprocess.Popen(cmdList, env=envDict,
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        Util._communicateWithStuckCheck(proc, bQuiet)
+
+    @staticmethod
     def _communicate(proc):
         if hasattr(selectors, 'PollSelector'):
             pselector = selectors.PollSelector
@@ -152,6 +158,45 @@ class Util:
                     sys.stdout.flush()
 
         retcode = proc.wait()
+        if retcode > 128:
+            time.sleep(PARENT_WAIT)
+        if retcode != 0:
+            raise subprocess.CalledProcessError(retcode, proc.args, sStdout.decode(sys.stdout.encoding), "")
+
+    @staticmethod
+    def _communicateWithStuckCheck(proc, bQuiet):
+        if hasattr(selectors, 'PollSelector'):
+            pselector = selectors.PollSelector
+        else:
+            pselector = selectors.SelectSelector
+
+        # redirect proc.stdout/proc.stderr to stdout/stderr
+        # make CalledProcessError contain stdout/stderr content
+        sStdout = b''
+        bStuck = False
+        with pselector() as selector:
+            os.set_blocking(proc.stdout.fileno(), False)
+            selector.register(proc.stdout, selectors.EVENT_READ)
+            while selector.get_map():
+                res = selector.select(TIMEOUT)
+                if res == []:
+                    bStuck = True
+                    if not bQuiet:
+                        print("Process stuck for %d second(s), terminated.\n" % (TIMEOUT))
+                    proc.terminate()
+                    break
+                for key, events in res:
+                    data = key.fileobj.read()
+                    if data == b'':
+                        selector.unregister(key.fileobj)
+                        continue
+                    sStdout += data
+                    sys.stdout.buffer.write(data)
+                    sys.stdout.flush()
+
+        retcode = proc.wait()
+        if bStuck:
+            raise ProcessStuckError(proc.args, TIMEOUT)
         if retcode > 128:
             time.sleep(PARENT_WAIT)
         if retcode != 0:
