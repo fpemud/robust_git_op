@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# simple_fop.py - robust simple file operation
+# simple_fops.py - robust simple file operations
 #
 # Copyright (c) 2019-2020 Fpemud <fpemud@sina.com>
 #
@@ -21,6 +21,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+
 
 import os
 import shutil
