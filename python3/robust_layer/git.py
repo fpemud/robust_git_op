@@ -28,14 +28,15 @@ import re
 import sys
 import time
 import subprocess
-from . import RETRY_WAIT
+from . import TIMEOUT, RETRY_WAIT
 from ._util import Util, ProcessStuckError
 
 
 def additional_environ():
     return {
         "GIT_HTTP_LOW_SPEED_LIMIT": "1024",
-        "GIT_HTTP_LOW_SPEED_TIME": "60",        # we don't use TIMEOUT as git network operation is not "continuable"
+        "GIT_HTTP_LOW_SPEED_TIME": "60",            # we don't use TIMEOUT as git network operation is not "continuable"
+        "GIT_HTTP_CONNECT_TIMEOUT": str(TIMEOUT),   # only has effect for patched git (https://stackoverflow.com/questions/28180013/can-you-specify-a-timeout-to-git-fetch)
     }
 
 
