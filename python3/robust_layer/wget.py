@@ -25,18 +25,35 @@
 
 import re
 import sys
-from . import TIMEOUT
+from . import TIMEOUT, RETRY_WAIT
 from ._util import Util
 
 
-def additional_param():
-    return ["-t", "0", "-w", str(TIMEOUT), "--random-wait", "-T", str(TIMEOUT)]
+SOURCE_CONTINUABLE = 1
+SOURCE_NOT_CONTINUABLE = 2
+SOURCE_DETECT_CONTINUABLE = 3
 
 
-def exec(*args):
+def additional_param(source_continuable=SOURCE_CONTINUABLE):
+    if source_continuable == SOURCE_CONTINUABLE:
+        return ["-t", "0", "-w", str(RETRY_WAIT), "--random-wait", "-T", str(TIMEOUT)]
+    elif source_continuable == SOURCE_NOT_CONTINUABLE:
+        # we don't modify "--read-timeout" here so that the current connection is not aborted so early
+        return ["-t", "0", "-w", str(RETRY_WAIT), "--random-wait", "--dns-timeout=%d" % (TIMEOUT), "--connect-timeout=%d" % (TIMEOUT)]
+    else:
+        assert False
+
+
+def exec(*args, source_continuable=SOURCE_CONTINUABLE):
+    # FIXME: SOURCE_DETECT_CONTINUABLE is not supported yet
+    # and wget sucks that it does not detect continuable so user can specify different timeout natively!
+    # there would be zero performance impact if wget do this natively
+    # and there would be no need for "source_continuable" parameter
+    assert source_continuable in [SOURCE_CONTINUABLE, SOURCE_NOT_CONTINUABLE]
+
     for x in args:
         assert x != "--random-wait"
-        assert not re.fullmatch("(-t|--tries|-w|--wait|-T|--timetout)(=.*)?", x)
+        assert not re.fullmatch("(-t|--tries|-w|--wait|-T|--timetout|--dns-timeout|--connect-timeout|--read-timeout)(=.*)?", x)
     args = list(args)
 
     # Util.cmdListExec() use pipe to do advanced process, here is to ensure progress is not affected
@@ -49,7 +66,7 @@ def exec(*args):
         if not bFound:
             args.insert(0, "--progress=bar:force")
 
-    Util.cmdListExec(["/usr/bin/wget"] + additional_param() + args)
+    Util.cmdListExec(["/usr/bin/wget"] + additional_param(source_continuable) + args)
 
 
 class PrivateUrlNotExistError(Exception):
