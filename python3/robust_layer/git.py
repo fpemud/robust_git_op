@@ -28,6 +28,7 @@ import re
 import sys
 import time
 import subprocess
+import urllib.parse
 from . import TIMEOUT, RETRY_WAIT
 from ._util import Util, ProcessStuckError
 
@@ -101,9 +102,17 @@ def _doGitNetOp(action, cmdList):
 def _checkPrivateDomainNotExist(e):
     # note: we are matching the output of a pty, take control characters into consideration
     m = re.search("^fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stdout, re.M)
-    if m is not None and Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
-        raise PrivateUrlNotExistError()
+    if m is not None:
+        if Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
+            raise PrivateUrlNotExistError()
 
     m = re.search("^fatal: unable to access '.*': Could not resolve host: (\\S+)", e.stdout, re.M)
-    if m is not None and Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
-        raise PrivateUrlNotExistError()
+    if m is not None:
+        if Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
+            raise PrivateUrlNotExistError()
+
+    m = re.search("^fatal: unable to access '(.*)': name lookup timed out", e.stdout, re.M)
+    if m is not None:
+        domain = urllib.parse.urlparse(m.group(1)).netloc
+        if Util.domainNameIsPrivate(domain) and Util.domainNameNotExist(domain):
+            raise PrivateUrlNotExistError()
