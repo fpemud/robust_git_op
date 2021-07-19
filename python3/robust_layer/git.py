@@ -101,6 +101,7 @@ def _doGitNetOp(action, cmdList):
 
 def _checkPrivateDomainNotExist(e):
     # note: we are matching the output of a pty, take control characters into consideration
+
     m = re.search("^fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stdout, re.M)
     if m is not None:
         if Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
